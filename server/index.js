@@ -4,7 +4,7 @@ const cors = require("cors");
 const app = express();
 
 const yeastUniprotDescriptions = require("./utils/uniprot-yeast-descriptions.json");
-const cyto = require("./features/bionic_net_0.5.txt.json");
+// const cyto = require("./features/bionic_net_0.5.txt.json");
 const tsneResults = require("./features/yeast-BIONIC-data.json");
 
 app.use(cors());
@@ -39,11 +39,11 @@ app.get("/geneinfo/:gene", (req, res) => {
   else res.json({ text: null });
 });
 
-app.get("/network", (req, res) => {
-  const pos = cyto.elements.nodes;
-  const edges = cyto.elements.edges;
-  res.json({ cytoPos: pos, cytoEdges: edges });
-});
+// app.get("/network", (req, res) => {
+//   const pos = cyto.elements.nodes;
+//   const edges = cyto.elements.edges;
+//   res.json({ cytoPos: pos, cytoEdges: edges });
+// });
 
 const port = process.env.PORT || 4000;
 app.listen(port);
