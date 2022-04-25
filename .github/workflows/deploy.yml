@@ -40,6 +40,6 @@ jobs:
           username: ${{ secrets.USERNAME }}
           password: ${{ secrets.PASSWORD }}
           port: ${{ secrets.PORT }}
-          source: ".,!node_modules"
-          target: "/root/bionic-webapp/client"
+          source: "client/.next"
+          target: "/root/bionic-webapp/client/.next"
       
