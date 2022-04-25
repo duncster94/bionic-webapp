@@ -41,5 +41,5 @@ jobs:
           password: ${{ secrets.PASSWORD }}
           port: ${{ secrets.PORT }}
           source: ".,!node_modules"
-          target: "~/bionic-webapp/client"
+          target: "/root/bionic-webapp/client"
       
