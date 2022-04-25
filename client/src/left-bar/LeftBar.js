@@ -45,8 +45,10 @@ const LeftBar = ({ props }) => {
 
     const selectedName = Object.keys(selectedNeighbors)[0];
 
+    const hostName = process.env.HOSTNAME || "http://localhost:4000";
+    
     const cacheResponse = await fetch(
-      `http://localhost:4000/geneinfo/${selectedName}`
+      `${hostName}/geneinfo/${selectedName}`
     ).then((response) => response.json());
 
     if (cacheResponse.text) {
