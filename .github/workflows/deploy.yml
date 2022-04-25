@@ -42,4 +42,5 @@ jobs:
           port: ${{ secrets.PORT }}
           source: "client/.next/*"
           target: "/root/bionic-webapp/client/.next"
+          strip_components: 4
       
