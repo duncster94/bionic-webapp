@@ -21,6 +21,9 @@ jobs:
   
   deploy_frontend_server:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: client
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v1
@@ -37,6 +40,6 @@ jobs:
           username: ${{ secrets.USERNAME }}
           password: ${{ secrets.PASSWORD }}
           port: ${{ secrets.PORT }}
-          source: "client/.next/."
+          source: ".next/*"
           target: "/root/bionic-webapp/client/.next"
       
