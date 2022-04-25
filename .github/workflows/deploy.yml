@@ -40,6 +40,6 @@ jobs:
           username: ${{ secrets.USERNAME }}
           password: ${{ secrets.PASSWORD }}
           port: ${{ secrets.PORT }}
-          source: "./.next/*"
+          source: "client/.next/*"
           target: "/root/bionic-webapp/client/.next"
       
