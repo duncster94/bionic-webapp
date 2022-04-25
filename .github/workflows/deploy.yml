@@ -30,10 +30,11 @@ jobs:
         with:
           node-version: '14.x'
 
-      - run: pwd && ls
+      - run: pwd && ls -a
       - run: npm ci
       - run: npm run build
-      - run: pwd && ls
+      - run: pwd && ls -a
+      - run: cd .next && ls -l
       
 #       - name: SCP build to VPS
 #         uses: appleboy/scp-action@master
