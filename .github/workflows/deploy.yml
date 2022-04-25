@@ -30,16 +30,18 @@ jobs:
         with:
           node-version: '14.x'
 
+      - run: pwd && ls
       - run: npm ci
       - run: npm run build
+      - run: pwd && ls
       
-      - name: SCP build to VPS
-        uses: appleboy/scp-action@master
-        with:
-          host: ${{ secrets.HOST }}
-          username: ${{ secrets.USERNAME }}
-          password: ${{ secrets.PASSWORD }}
-          port: ${{ secrets.PORT }}
-          source: ".next/*"
-          target: "/root/bionic-webapp/client/.next"
+#       - name: SCP build to VPS
+#         uses: appleboy/scp-action@master
+#         with:
+#           host: ${{ secrets.HOST }}
+#           username: ${{ secrets.USERNAME }}
+#           password: ${{ secrets.PASSWORD }}
+#           port: ${{ secrets.PORT }}
+#           source: ".next/*"
+#           target: "/root/bionic-webapp/client/.next"
       
