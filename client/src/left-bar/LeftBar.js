@@ -51,7 +51,8 @@ const LeftBar = ({ props }) => {
 
     const selectedName = Object.keys(selectedNeighbors)[0];
 
-    const hostName = process.env.HOSTNAME || "http://localhost:4000";
+    const hostName =
+      process.env.NEXT_PUBLIC_HOSTNAME || "http://localhost:4000";
 
     const cacheResponse = await fetch(
       `${hostName}/geneinfo/${selectedName}`
@@ -200,7 +201,7 @@ const LeftBar = ({ props }) => {
 const DataOverlay = ({ props }) => {
   const theme = useTheme();
 
-  let width;
+  let width = 0;
   if (useMediaQuery(theme.breakpoints.up("sm"))) {
     width = "calc(100% - 65px - 277px)";
   }
@@ -241,7 +242,6 @@ const GeneTextBox = ({ props }) => {
     <Paper
       style={{
         padding: "8px",
-        // maxHeight: "300px",
         display: textDialogOpen ? "block" : "none",
       }}
       elevation={6}
