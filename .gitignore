@@ -5,3 +5,4 @@ server/features/test_names.txt
 server/features/yeast_BIONIC_features.csv
 
 **/node_modules
+client/.next/*
