@@ -16,7 +16,16 @@ const NeighborSlider = ({ props }) => {
   };
 
   return (
-    <Box sx={{ width: 300 }}>
+    <Box
+      sx={(theme) => ({
+        [theme.breakpoints.up("xs")]: {
+          width: "180px",
+        },
+        [theme.breakpoints.up("md")]: {
+          width: "300px",
+        },
+      })}
+    >
       <Typography>Neighborhood size: {displayValue}</Typography>
       <Slider
         aria-label="Number of neighbors"

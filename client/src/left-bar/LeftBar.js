@@ -10,7 +10,9 @@ import {
   LinearProgress,
   Link,
   Stack,
+  useMediaQuery,
 } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
 import { Box } from "@mui/system";
 import React from "react";
 import * as d3 from "d3";
@@ -18,6 +20,8 @@ import ArticleOutlinedIcon from "@mui/icons-material/ArticleOutlined";
 import InsertChartOutlinedIcon from "@mui/icons-material/InsertChartOutlined";
 import CloseOutlinedIcon from "@mui/icons-material/CloseOutlined";
 import GitHubIcon from "@mui/icons-material/GitHub";
+import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
+import HelpDialog from "./HelpDialog";
 
 const LeftBar = ({ props }) => {
   const { selectedNeighbors, rightBarType, enrichment, setEnrichment } = props;
@@ -39,6 +43,8 @@ const LeftBar = ({ props }) => {
     rightBarType !== "neighbor" ||
     Object.keys(selectedNeighbors).length === 0;
 
+  const [helpDialogOpen, setHelpDialogOpen] = React.useState(false);
+
   const handleTextDescriptionClick = async () => {
     setTextDialogOpen(true);
     setIsTextLoading(true);
@@ -46,7 +52,7 @@ const LeftBar = ({ props }) => {
     const selectedName = Object.keys(selectedNeighbors)[0];
 
     const hostName = process.env.HOSTNAME || "http://localhost:4000";
-    
+
     const cacheResponse = await fetch(
       `${hostName}/geneinfo/${selectedName}`
     ).then((response) => response.json());
@@ -167,29 +173,51 @@ const LeftBar = ({ props }) => {
           <div style={{ marginTop: "auto" }}>
             <IconButton
               props={{
-                ariaLabel: "BIONIC GitHub",
-                icon: <GitHubIcon />,
-                // handleClick: handleEnrichmentClick,
+                ariaLabel: "help button",
+                icon: <HelpOutlineIcon />,
                 disabled: false,
-                tip: "GitHub",
-                href: "https://github.com/bowang-lab/BIONIC",
+                handleClick: () => setHelpDialogOpen(true),
+                tip: "What is this?",
               }}
             />
           </div>
+          <IconButton
+            props={{
+              ariaLabel: "BIONIC GitHub",
+              icon: <GitHubIcon />,
+              disabled: false,
+              tip: "GitHub",
+              href: "https://github.com/bowang-lab/BIONIC",
+            }}
+          />
         </Stack>
       </Paper>
+      <HelpDialog props={{ helpDialogOpen, setHelpDialogOpen }} />
     </>
   );
 };
 
 const DataOverlay = ({ props }) => {
+  const theme = useTheme();
+
+  let width;
+  if (useMediaQuery(theme.breakpoints.up("sm"))) {
+    width = "calc(100% - 65px - 277px)";
+  }
+  if (useMediaQuery(theme.breakpoints.up("lg"))) {
+    width = "600px";
+  }
+  if (useMediaQuery(theme.breakpoints.down("sm"))) {
+    width = "calc(100% - 65px)";
+  }
+
   return (
     <Grid
       container
       style={{
         position: "absolute",
         left: "65px",
-        maxWidth: "600px",
+        width,
         zIndex: 1,
       }}
       direction="column"
@@ -218,13 +246,35 @@ const GeneTextBox = ({ props }) => {
       }}
       elevation={6}
     >
-      <Grid container justifyContent="space-between">
-        <Grid item>
-          <Typography variant="h5" component="h1">
-            Description for {name}
-          </Typography>
+      <div style={{ position: "relative" }}>
+        <Grid container justifyContent="space-between">
+          <Grid item>
+            <Typography variant="h5" component="h1">
+              Description for {name}
+            </Typography>
+          </Grid>
         </Grid>
-        <Grid item>
+        <Divider style={{ paddingTop: "4px" }} />
+        {isTextLoading ? (
+          <LoadingBar />
+        ) : (
+          <>
+            <Box style={{ maxHeight: "300px", overflowY: "auto" }}>
+              <Typography>{geneText}</Typography>
+              <Typography style={{ fontSize: "0.75rem", paddingTop: "5px" }}>
+                Powered by{" "}
+                <Link
+                  href="https://www.uniprot.org/"
+                  target="_blank"
+                  rel="noopener"
+                >
+                  Uniprot
+                </Link>
+              </Typography>
+            </Box>
+          </>
+        )}
+        <div style={{ position: "absolute", right: 0, top: 0 }}>
           <IconButton
             props={{
               ariaLabel: "close gene info",
@@ -234,28 +284,8 @@ const GeneTextBox = ({ props }) => {
               size: "small",
             }}
           />
-        </Grid>
-      </Grid>
-      <Divider style={{ paddingTop: "4px" }} />
-      {isTextLoading ? (
-        <LoadingBar />
-      ) : (
-        <>
-          <Box style={{ maxHeight: "300px", overflowY: "auto" }}>
-            <Typography>{geneText}</Typography>
-            <Typography style={{ fontSize: "0.75rem", paddingTop: "5px" }}>
-              Powered by{" "}
-              <Link
-                href="https://www.uniprot.org/"
-                target="_blank"
-                rel="noopener"
-              >
-                Uniprot
-              </Link>
-            </Typography>
-          </Box>
-        </>
-      )}
+        </div>
+      </div>
     </Paper>
   );
 };
@@ -269,10 +299,15 @@ const EnrichmentBox = ({ props }) => {
   } = props;
   const svgRef = React.useRef();
 
-  React.useEffect(() => {
+  const [viewportWidth, setViewportWidth] = React.useState(undefined);
+
+  const renderChart = () => {
     d3.select(svgRef.current).selectChildren().remove();
     const margin = { top: 5, right: 20, bottom: 40, left: 25 };
-    const width = 600 - margin.left - margin.right;
+    const width =
+      d3.select(svgRef.current).node().getBoundingClientRect().width -
+      margin.left -
+      margin.right;
     const height = 400 - margin.top - margin.bottom;
 
     function wrap() {
@@ -288,8 +323,10 @@ const EnrichmentBox = ({ props }) => {
 
     const svg = d3
       .select(svgRef.current)
-      .attr("width", width + margin.left + margin.right)
+      // .attr("width", width + margin.left + margin.right)
       .attr("height", height + margin.top + margin.bottom)
+      .attr("width", "100%")
+      // .attr("height", "100%")
       .append("g")
       .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
@@ -373,7 +410,22 @@ const EnrichmentBox = ({ props }) => {
       .attr("dy", "1em")
       .style("text-anchor", "middle")
       .text("Enriched Bioprocesses");
+  };
+
+  React.useEffect(() => {
+    renderChart();
   }, [enrichment]);
+
+  React.useEffect(() => {
+    renderChart();
+  }, [viewportWidth]);
+
+  const handleResize = () => {
+    setViewportWidth(window.innerWidth);
+  };
+  React.useEffect(() => {
+    window.addEventListener("resize", handleResize, false);
+  }, []);
 
   return (
     <Paper
@@ -387,27 +439,35 @@ const EnrichmentBox = ({ props }) => {
       {isEnrichmentLoading ? (
         <LoadingBar />
       ) : (
-        <>
+        <div style={{ position: "relative" }}>
           <Grid container justifyContent="space-between">
             <Grid item>
               <Typography component="h1" style={{ fontSize: "1.2rem" }}>
                 GO bioprocess enrichment for selected neighborhood
               </Typography>
             </Grid>
-            <Grid item>
-              <IconButton
-                props={{
-                  ariaLabel: "close gene enrichment",
-                  icon: <CloseOutlinedIcon />,
-                  handleClick: () => setEnrichmentDialogOpen(false),
-                  disabled: false,
-                  size: "small",
-                }}
-              />
-            </Grid>
           </Grid>
 
-          <svg ref={svgRef} />
+          <div
+            style={{
+              display: "inline-block",
+              position: "relative",
+              width: "100%",
+              height: "400px",
+              overflow: "hidden",
+            }}
+          >
+            <svg
+              ref={svgRef}
+              style={{
+                display: "inline-block",
+                position: "absolute",
+                top: 0,
+                left: 0,
+                width: "100%",
+              }}
+            />
+          </div>
           <Typography style={{ fontSize: "0.75rem" }}>
             Powered by{" "}
             <Link
@@ -418,7 +478,18 @@ const EnrichmentBox = ({ props }) => {
               Enrichr
             </Link>
           </Typography>
-        </>
+          <div style={{ position: "absolute", right: 0, top: 0 }}>
+            <IconButton
+              props={{
+                ariaLabel: "close gene enrichment",
+                icon: <CloseOutlinedIcon />,
+                handleClick: () => setEnrichmentDialogOpen(false),
+                disabled: false,
+                size: "small",
+              }}
+            />
+          </div>
+        </div>
       )}
     </Paper>
   );

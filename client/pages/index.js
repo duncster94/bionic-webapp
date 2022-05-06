@@ -12,23 +12,29 @@ import {
   Grid,
   Paper,
   Divider,
-  Button,
   Autocomplete,
   TextField,
   InputAdornment,
   IconButton,
+  useMediaQuery,
+  Drawer,
+  Tooltip,
 } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
 import { styled } from "@mui/system";
 import * as d3 from "d3";
 import colorMapper from "../src/utils/colorMapper";
 import Fuse from "fuse.js";
 import CloseOutlinedIcon from "@mui/icons-material/CloseOutlined";
+import MenuOpenIcon from "@mui/icons-material/MenuOpen";
 
 export default function Home({ pos, names, neighbors }) {
   const [selectedNeighbors, setSelectedNeighbors] = React.useState([]);
   const [rightBarType, setRightBarType] = React.useState(null);
   const [enrichment, setEnrichment] = React.useState([]);
   const [numNeighbors, setNumNeighbors] = React.useState(25);
+
+  const theme = useTheme();
 
   return (
     <div>
@@ -109,7 +115,9 @@ export default function Home({ pos, names, neighbors }) {
           style={{
             position: "absolute",
             bottom: 10,
-            left: "50%",
+            left: useMediaQuery(theme.breakpoints.down("sm"))
+              ? "calc(50% + 28px)"
+              : "calc(50% + 28px - 138.5px )",
             transform: "translate(-50%, 0)",
           }}
         >
@@ -131,6 +139,7 @@ const GeneSearch = function ({ props }) {
     setRightBarType("search");
     setValue(value);
     const searchResults = fuse.search(value).map((item) => item.item);
+    console.log(searchResults);
 
     const searchResultsObj = {};
     for (let [idx, node] of searchResults.slice(0, 50).entries()) {
@@ -169,7 +178,24 @@ const GeneSearch = function ({ props }) {
   );
 };
 
-const RightBar = function ({ props }) {
+const DrawerWrapper = (props) => {
+  const { children, open, setOpen } = props;
+
+  const handleOpen = (isOpen) => () => setOpen(isOpen);
+
+  return (
+    <Drawer
+      open={open}
+      onOpen={handleOpen(true)}
+      onClose={handleOpen(false)}
+      anchor="right"
+    >
+      {children}
+    </Drawer>
+  );
+};
+
+const RightBarContent = ({ props }) => {
   const {
     names,
     neighbors,
@@ -179,6 +205,8 @@ const RightBar = function ({ props }) {
     setRightBarType,
   } = props;
 
+  const theme = useTheme();
+
   let keys = Object.keys(selectedNeighbors);
   keys.sort(function (a, b) {
     return selectedNeighbors[a] - selectedNeighbors[b];
@@ -187,7 +215,12 @@ const RightBar = function ({ props }) {
   return (
     <Paper
       elevation={6}
-      style={{ paddingLeft: "8px", paddingTop: "8px", height: "100%" }}
+      style={{
+        paddingLeft: "8px",
+        paddingTop: "8px",
+        height: "100%",
+        // display: useMediaQuery(theme.breakpoints.down("sm")) ? "none" : "block",
+      }}
     >
       <Grid
         container
@@ -218,6 +251,41 @@ const RightBar = function ({ props }) {
         />
       </Grid>
     </Paper>
+  );
+};
+
+const RightBar = function ({ props }) {
+  const {
+    names,
+    neighbors,
+    selectedNeighbors,
+    setSelectedNeighbors,
+    rightBarType,
+    setRightBarType,
+  } = props;
+
+  const [drawerOpen, setDrawerOpen] = React.useState(false);
+
+  const theme = useTheme();
+
+  let keys = Object.keys(selectedNeighbors);
+  keys.sort(function (a, b) {
+    return selectedNeighbors[a] - selectedNeighbors[b];
+  });
+
+  return useMediaQuery(theme.breakpoints.down("sm")) ? (
+    <>
+      <IconButton onClick={() => setDrawerOpen(true)}>
+        <Tooltip title="Neighbors and search" placement="left" enterDelay={400}>
+          <MenuOpenIcon />
+        </Tooltip>
+      </IconButton>
+      <DrawerWrapper open={drawerOpen} setOpen={setDrawerOpen}>
+        <RightBarContent props={{ ...props }} />
+      </DrawerWrapper>
+    </>
+  ) : (
+    <RightBarContent props={{ ...props }} />
   );
 };
 
@@ -255,7 +323,7 @@ const SearchOptions = function ({ props }) {
       <Grid item xs style={{ height: "100%", overflowY: "auto" }}>
         {names.map(
           (name, idx) =>
-            idx !== 0 && (
+            (rightBarType !== "neighbor" || idx !== 0) && (
               <NeighborChip
                 props={{
                   name,
